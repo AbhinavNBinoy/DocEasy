@@ -18,6 +18,11 @@ const appointmentSchema = new mongoose.Schema({
         fileType: { type: String },
         uploadedAt: { type: Date },
         uploadedBy: { type: String, enum: ['doctor', 'patient'] }
+    },
+    textPrescription: {
+        content: { type: String },
+        createdAt: { type: Date },
+        updatedAt: { type: Date }
     }
 })
 

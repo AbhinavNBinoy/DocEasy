@@ -190,6 +190,43 @@ const doctorDashboard = async (req, res) => {
     }
 }
 
+// API to save prescription
+const savePrescription = async (req, res) => {
+    try {
+        const { appointmentId, prescription } = req.body;
+        const docId = req.body.docId; // Added by auth middleware
+
+        // Find the appointment and verify it belongs to this doctor
+        const appointment = await appointmentModel.findOne({
+            _id: appointmentId,
+            docId: docId,
+            isCompleted: true
+        });
+
+        if (!appointment) {
+            return res.json({ 
+                success: false, 
+                message: 'Appointment not found or not authorized' 
+            });
+        }
+
+        // Update the appointment with the prescription
+        await appointmentModel.findByIdAndUpdate(appointmentId, {
+            textPrescription: {
+                content: prescription,
+                updatedAt: new Date(),
+                ...(appointment.textPrescription ? {} : { createdAt: new Date() })
+            }
+        });
+
+        res.json({ success: true, message: 'Prescription saved successfully' });
+
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
 export {
     loginDoctor,
     appointmentsDoctor,
@@ -199,5 +236,6 @@ export {
     appointmentComplete,
     doctorDashboard,
     doctorProfile,
-    updateDoctorProfile
+    updateDoctorProfile,
+    savePrescription
 }

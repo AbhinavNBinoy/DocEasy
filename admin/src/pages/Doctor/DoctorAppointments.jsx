@@ -1,19 +1,30 @@
-import React from 'react'
-import { useContext, useEffect } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { DoctorContext } from '../../context/DoctorContext'
 import { AppContext } from '../../context/AppContext'
 import { assets } from '../../assets/assets'
+import PrescriptionModal from '../../components/PrescriptionModal'
 
 const DoctorAppointments = () => {
 
   const { dToken, appointments, getAppointments, cancelAppointment, completeAppointment } = useContext(DoctorContext)
   const { slotDateFormat, calculateAge, currency } = useContext(AppContext)
+  const [selectedAppointment, setSelectedAppointment] = useState(null)
+  const [showPrescriptionModal, setShowPrescriptionModal] = useState(false)
 
   useEffect(() => {
     if (dToken) {
       getAppointments()
     }
   }, [dToken])
+
+  const handlePrescriptionClick = (appointment) => {
+    setSelectedAppointment(appointment)
+    setShowPrescriptionModal(true)
+  }
+
+  const handlePrescriptionSave = () => {
+    getAppointments() // Refresh appointments to show updated prescription
+  }
 
   return (
     <div className='w-full max-w-6xl m-5 '>
@@ -47,7 +58,15 @@ const DoctorAppointments = () => {
             {item.cancelled
               ? <p className='text-red-400 text-xs font-medium'>Cancelled</p>
               : item.isCompleted
-                ? <p className='text-green-500 text-xs font-medium'>Completed</p>
+                ? <div className='flex flex-col gap-2'>
+                    <p className='text-green-500 text-xs font-medium'>Completed</p>
+                    <button 
+                      onClick={() => handlePrescriptionClick(item)}
+                      className='inline-block text-xs bg-primary text-white px-3 py-1 rounded hover:bg-primary/90 w-fit'
+                    >
+                      {item.textPrescription ? 'View/Edit Prescription' : 'Add Prescription'}
+                    </button>
+                  </div>
                 : <div className='flex'>
                     <img onClick={() => cancelAppointment(item._id)} className='w-10 cursor-pointer' src={assets.cancel_icon} alt="" />
                     <img onClick={() => completeAppointment(item._id)} className='w-10 cursor-pointer' src={assets.tick_icon} alt="" />
@@ -56,6 +75,17 @@ const DoctorAppointments = () => {
           </div>
         ))}
       </div>
+
+      {showPrescriptionModal && selectedAppointment && (
+        <PrescriptionModal
+          appointment={selectedAppointment}
+          onClose={() => {
+            setShowPrescriptionModal(false)
+            setSelectedAppointment(null)
+          }}
+          onSaveSuccess={handlePrescriptionSave}
+        />
+      )}
 
     </div>
   )

@@ -4,6 +4,8 @@ import { AppContext } from '../context/AppContext'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { assets } from '../assets/assets'
+import ViewPrescriptionModal from '../components/ViewPrescriptionModal'
+import DotLoader from '../components/DotLoader'
 
 const MyAppointments = () => {
 
@@ -12,6 +14,8 @@ const MyAppointments = () => {
 
     const [appointments, setAppointments] = useState([])
     const [payment, setPayment] = useState('')
+    const [selectedAppointment, setSelectedAppointment] = useState(null)
+    const [showPrescriptionModal, setShowPrescriptionModal] = useState(false)
 
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -105,6 +109,11 @@ const MyAppointments = () => {
         }
     }
 
+    const handleViewPrescription = (appointment) => {
+        setSelectedAppointment(appointment)
+        setShowPrescriptionModal(true)
+    }
+
     useEffect(() => {
         if (token) {
             getUserAppointments()
@@ -161,16 +170,45 @@ const MyAppointments = () => {
 
                             {/* Payment Status */}
                             {!item.cancelled && item.payment && !item.isCompleted && (
-                                <button className='sm:min-w-48 py-2 border rounded text-[#696969] bg-[#EAEFFF]'>
-                                    Paid
-                                </button>
+                                <>
+                                    <button className='sm:min-w-48 py-2 border rounded text-[#696969] bg-[#EAEFFF]'>
+                                        Paid
+                                    </button>
+                                    <button className='sm:min-w-48 py-2 border rounded text-orange-500 border-orange-500 flex items-center justify-center gap-2'>
+                                        Pending
+                                        <DotLoader color="bg-orange-500" />
+                                    </button>
+                                </>
                             )}
 
                             {/* Appointment Status */}
                             {item.isCompleted && (
-                                <button className='sm:min-w-48 py-2 border border-green-500 rounded text-green-500'>
-                                    Completed
-                                </button>
+                                <div className='flex flex-col gap-2'>
+                                    <button className='sm:min-w-48 py-2 border border-green-500 rounded text-green-500'>
+                                        Completed
+                                    </button>
+                                    {item.textPrescription && (
+                                        <button 
+                                            onClick={() => {
+                                                setSelectedAppointment(item);
+                                                setShowPrescriptionModal(true);
+                                            }}
+                                            className='bg-primary text-white sm:min-w-48 py-2 rounded hover:bg-primary/90 transition-colors'
+                                        >
+                                            View Prescription
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Pending Status - Show when not paid */}
+                            {!item.cancelled && !item.payment && !item.isCompleted && (
+                                <>
+                                    <button className='sm:min-w-48 py-2 border rounded text-orange-500 border-orange-500 flex items-center justify-center gap-2'>
+                                        Pending
+                                        <DotLoader color="bg-orange-500" />
+                                    </button>
+                                </>
                             )}
 
                             {/* Cancel Appointment */}
@@ -191,6 +229,16 @@ const MyAppointments = () => {
                     </div>
                 ))}
             </div>
+
+            {showPrescriptionModal && selectedAppointment && (
+                <ViewPrescriptionModal
+                    appointment={selectedAppointment}
+                    onClose={() => {
+                        setShowPrescriptionModal(false);
+                        setSelectedAppointment(null);
+                    }}
+                />
+            )}
         </div>
     )
 }
